@@ -10,6 +10,14 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.scss$/,
+        use: [
+          { loader: 'style-loader' },
+          { loader: 'css-loader' },
+          { loader: 'sass-loader' }],
+        include: defaultInclude
+      },
+      {
         test: /\.css$/,
         use: [{ loader: 'style-loader' }, { loader: 'css-loader' }, { loader: 'postcss-loader' }],
         include: defaultInclude
@@ -33,20 +41,26 @@ module.exports = {
   },
   target: 'electron-renderer',
   plugins: [
-    new HtmlWebpackPlugin(),
+    new HtmlWebpackPlugin({
+      title: 'Electron webpack app'
+    }),
     new webpack.DefinePlugin({
       'process.env.NODE_ENV': JSON.stringify('development')
     })
   ],
   devtool: 'cheap-source-map',
   devServer: {
-    contentBase: path.resolve(__dirname, 'dist'),
-    stats: {
-      colors: true,
-      chunks: false,
-      children: false
+    static: {
+      directory: path.join(__dirname, 'dist'),
     },
-    before() {
+    client: {
+      logging: 'info',
+    },
+    onBeforeSetupMiddleware(devServer) {
+      if (!devServer) {
+        throw new Error('webpack-dev-server is not defined');
+      }
+
       spawn(
         'electron',
         ['.'],
